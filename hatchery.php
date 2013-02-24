@@ -1,20 +1,21 @@
-#!/usr/bin/env php
-<?php
+#!/usr/bin/env php<?php
 namespace Kisma\Pods;
 
 require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/Commands/Initialize.php';
 
 use Symfony\Component\Console\Application;
-use Kisma\Pods\Commands\Initialize;
 
 /**
- * Class Hatchery
+ * Hatchery
  *
  * @package Kisma\Pods
  */
 class Hatchery extends Application
 {
+	//*************************************************************************
+	//* Constants
+	//*************************************************************************
+
 	/**
 	 * @var string
 	 */
@@ -24,6 +25,11 @@ class Hatchery extends Application
 	 * @var string
 	 */
 	const HATCHERY_TITLE = 'Kisma Pod Hatchery';
+
+	/**
+	 * @var string
+	 */
+	const HATCHERY_PATH_ENV = 'HATCHERY_COMMAND_PATH';
 
 	//*************************************************************************
 	//* Methods
@@ -43,7 +49,41 @@ class Hatchery extends Application
 	public static function hatch( $version = self::HATCHERY_VERSION )
 	{
 		$_app = new self( $version );
-		$_app->add( new Initialize() );
+
+		//	Automatically add any commands that exist in the commands directory.
+		$_commands = array();
+		$_files = glob( __DIR__ . '/Commands/*.php' );
+
+		if ( !empty( $_files ) )
+		{
+			foreach ( $_files as $_file )
+			{
+				if ( !is_dir( $_file ) )
+				{
+					/** @noinspection PhpIncludeInspection */
+					@require_once $_file;
+
+					//	Construct a class name from the directory entry. PSR-0 required.
+					$_class = 'Kisma\\Pods' . str_ireplace(
+						array(
+							 __DIR__,
+							 DIRECTORY_SEPARATOR,
+							 '.php'
+						),
+						array(
+							 null,
+							 '\\',
+							 null,
+						),
+						$_file
+					);
+
+					$_commands[] = new $_class;
+				}
+			}
+		}
+
+		$_app->addCommands( $_commands );
 		$_app->run();
 	}
 
