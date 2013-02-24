@@ -1,4 +1,5 @@
-#!/usr/bin/env php<?php
+#!/usr/bin/env php
+<?php
 namespace Kisma\Pods;
 
 require_once __DIR__ . '/vendor/autoload.php';
